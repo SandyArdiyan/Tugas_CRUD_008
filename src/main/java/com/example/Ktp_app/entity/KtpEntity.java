@@ -13,6 +13,7 @@ public class KtpEntity {
     private Integer id;
 
     @Column(unique = true, nullable = false)
+    private String nomorKtp;
 
     private String namaLengkap;
     private String alamat;
