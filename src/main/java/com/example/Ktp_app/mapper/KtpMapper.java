@@ -15,7 +15,7 @@ public class KtpMapper {
         entity.setNamaLengkap(dto.getNamaLengkap());
         entity.setAlamat(dto.getAlamat());
 
-
+        entity.setTanggalLahir(DateUtil.parseDate(dto.getTanggalLahir()));
 
         entity.setJenisKelamin(dto.getJenisKelamin());
         return entity;
