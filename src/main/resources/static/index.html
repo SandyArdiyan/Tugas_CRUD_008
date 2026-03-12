@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kelola Data KTP - Sando App</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 40px; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        h2 { color: #333; text-align: center; }
+
+        /* Gaya Form */
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
+        button { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .btn-save { background-color: #28a745; color: white; width: 100%; }
+        .btn-cancel { background-color: #6c757d; color: white; width: 100%; margin-top: 5px; display: none; }
+
+        /* Gaya Tabel */
+        table { width: 100%; border-collapse: collapse; margin-top: 30px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #007bff; color: white; }
+        tr:nth-child(even) { background-color: #f2f2f2; }
+        .btn-edit { background-color: #ffc107; color: black; margin-right: 5px; }
+        .btn-delete { background-color: #dc3545; color: white; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Manajemen Data KTP</h2>
+
+    <form id="ktpForm">
+        <input type="hidden" id="ktpId"> <div class="form-group">
+        <label>Nomor KTP</label>
+        <input type="text" id="nomorKtp" placeholder="Masukkan 16 digit No KTP" required>
+    </div>
+        <div class="form-group">
+            <label>Nama Lengkap</label>
+            <input type="text" id="namaLengkap" required>
+        </div>
+        <div class="form-group">
+            <label>Alamat</label>
+            <input type="text" id="alamat">
+        </div>
+        <div class="form-group">
+            <label>Tanggal Lahir</label>
+            <input type="date" id="tanggalLahir" required>
+        </div>
+        <div class="form-group">
+            <label>Jenis Kelamin</label>
+            <select id="jenisKelamin">
+                <option value="Laki-laki">Laki-laki</option>
+                <option value="Perempuan">Perempuan</option>
+            </select>
+        </div>
+
+        <button type="submit" class="btn-save" id="submitBtn">Simpan Data</button>
+        <button type="button" class="btn-cancel" id="cancelBtn">Batal Edit</button>
+    </form>
+
+    <hr>
+
+    <table>
+        <thead>
+        <tr>
+            <th>No KTP</th>
+            <th>Nama</th>
+            <th>Alamat</th>
+            <th>Aksi</th>
+        </tr>
+        </thead>
+        <tbody id="ktpTableBody">
+        </tbody>
+    </table>
+</div>
+
+<script>
+    const API_URL = "http://localhost:8080/ktp";
+
+    // 1. GET: Fungsi untuk mengambil dan menampilkan data
+    function loadKtp() {
+        $.ajax({
+            url: API_URL,
+            type: "GET",
+            success: function(data) {
+                let rows = "";
+                data.forEach(ktp => {
+                    rows += `
+                        <tr>
+                            <td>${ktp.nomorKtp}</td>
+                            <td>${ktp.namaLengkap}</td>
+                            <td>${ktp.alamat}</td>
+                            <td>
+                                <button class="btn-edit" onclick="editKtp(${ktp.id})">Edit</button>
+                                <button class="btn-delete" onclick="deleteKtp(${ktp.id})">Hapus</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                $("#ktpTableBody").html(rows);
+            },
+            error: function(err) {
+                console.error("Gagal memuat data", err);
+            }
+        });
+    }
+
+    // 2. POST & PUT: Simpan atau Perbarui data
+    $("#ktpForm").submit(function(e) {
+        e.preventDefault();
+
+        const id = $("#ktpId").val();
+        const method = id ? "PUT" : "POST";
+        const url = id ? `${API_URL}/${id}` : API_URL;
+
+        const ktpData = {
+            nomorKtp: $("#nomorKtp").val(),
+            namaLengkap: $("#namaLengkap").val(),
+            alamat: $("#alamat").val(),
+            tanggalLahir: $("#tanggalLahir").val(),
+            jenisKelamin: $("#jenisKelamin").val()
+        };
+
+        $.ajax({
+            url: url,
+            type: method,
+            contentType: "application/json",
+            data: JSON.stringify(ktpData),
+            success: function(response) {
+                alert(id ? "Data berhasil diperbarui!" : "Data berhasil ditambahkan!");
+                resetForm();
+                loadKtp();
+            },
+            error: function(xhr) {
+                alert("Error: " + xhr.responseText);
+            }
+        });
+    });
+
+    // 3. EDIT: Mengambil data ke form untuk diubah
+    window.editKtp = function(id) {
+        $.get(`${API_URL}/${id}`, function(ktp) {
+            $("#ktpId").val(ktp.id);
+            $("#nomorKtp").val(ktp.nomorKtp).prop('readonly', true); // No KTP biasanya tidak diedit
+            $("#namaLengkap").val(ktp.namaLengkap);
+            $("#alamat").val(ktp.alamat);
+            $("#tanggalLahir").val(ktp.tanggalLahir);
+            $("#jenisKelamin").val(ktp.jenisKelamin);
+
+            $("#submitBtn").text("Perbarui Data").css("background-color", "#007bff");
+            $("#cancelBtn").show();
+        });
+    }
+
+    // 4. DELETE: Menghapus data
+    window.deleteKtp = function(id) {
+        if(confirm("Apakah Anda yakin ingin menghapus data ini?")) {
+            $.ajax({
+                url: `${API_URL}/${id}`,
+                type: "DELETE",
+                success: function() {
+                    alert("Data berhasil dihapus!");
+                    loadKtp();
+                }
+            });
+        }
+    }
+
+    // Reset Form
+    function resetForm() {
+        $("#ktpForm")[0].reset();
+        $("#ktpId").val("");
+        $("#nomorKtp").prop('readonly', false);
+        $("#submitBtn").text("Simpan Data").css("background-color", "#28a745");
+        $("#cancelBtn").hide();
+    }
+
+    $("#cancelBtn").click(resetForm);
+
+    // Jalankan load data saat halaman siap
+    $(document).ready(function() {
+        loadKtp();
+    });
+</script>
+
+</body>
+</html>
