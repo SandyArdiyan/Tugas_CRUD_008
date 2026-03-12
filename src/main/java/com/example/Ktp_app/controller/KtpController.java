@@ -24,6 +24,5 @@ public class KtpController {
     @PutMapping("/{id}")
     public KtpDto update(@PathVariable Integer id, @RequestBody KtpDto dto) { return service.update(id, dto); }
 
-    @DeleteMapping("/{id}")
-    public void delete(@PathVariable Integer id) { service.delete(id); }
+
 }
