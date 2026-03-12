@@ -8,5 +8,6 @@ public class KtpDto {
     private String nomorKtp;
     private String namaLengkap;
     private String alamat;
+    private String tanggalLahir;
     private String jenisKelamin;
 }
